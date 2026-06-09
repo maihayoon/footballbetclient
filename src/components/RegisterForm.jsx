@@ -7,7 +7,8 @@ const [ password, setPassword ] = useState("");
 const [email, setEmail] = useState("");
 
 const [ message, setMessage ] = useState(" ");
-
+// --- תוספת: משתנה שיעזור לנו לצבוע את ההודעה בירוק (הצלחה) או אדום (שגיאה) ---
+    const [isSuccess, setIsSuccess] = useState(false);
 // קריאת API GET ןקיראת POST
 
 
@@ -40,19 +41,32 @@ const [ message, setMessage ] = useState(" ");
         }
         return isValid;
   }
-
     const handleRegister = (e) => {
         e.preventDefault();
-        const data= {username, password, email};
+        setMessage("");
 
-        register (data).then(response => {
-           if(response.data.success){
-                }
-       })
-           .catch(error => {
+        // כאן שינינו את השם ל-passwordHash כדי שיתאים ב-100% ל-User.java החדש בשרת
+        const data = {
+            username: username,
+            passwordHash: password, // שלח את המשתנה password תחת המפתח passwordHash
+            email: email
+        };
+
+        register(data).then(response => {
+            setIsSuccess(true);
+            setMessage(response.data); // השרת מחזיר מחרוזת "המשתמש נרשם בהצלחה!"
+
+            setUsername("");
+            setPassword("");
+            setEmail("");
+        })
+            .catch(error => {
                 console.log(error);
-           })
-        }
+                setIsSuccess(false);
+                const serverErrorMessage = error.response?.data || "הרשמה נכשלה, אנא נסה שוב.";
+                setMessage(serverErrorMessage);
+            })
+    }
 
 
 
@@ -60,26 +74,29 @@ const [ message, setMessage ] = useState(" ");
 
 
     return(
-        <form onSubmit={handleRegister}>
+        <div>
+    <form onSubmit={handleRegister}>
+            <h2> הרשמה למערכת </h2>
             <input
                 type = "text"
                 value={ username }
                 placeholder = "Enter username"
                 onChange={ (e) => setUsername(e.target.value) }
                />
+            <br/>
 
             <input
             type = "password"
             value={ password }
             placeholder = "Enter password"
             onChange={ (e) => setPassword(e.target.value) }/>
-
+<br/>
             <input
                 type = "email"
                 value={ email }
                 placeholder = "Enter email"
                 onChange={ (e) => setEmail(e.target.value) }/>
-
+<br/>
             <button
                 disabled={ validation() }
                 type="submit">
@@ -89,6 +106,13 @@ const [ message, setMessage ] = useState(" ");
 
 
         </form>
+        <div>
+    {/* הצגת הודעת הצלחה או שגיאה למשתמש */}
+    {message&&(
+        <p>{message}</p>
+    )}
+        </div>
+        </div>
     )
 }
 export default RegisterForm;
